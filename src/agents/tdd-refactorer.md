@@ -11,12 +11,15 @@ tools: Read, Glob, Grep, Write, Edit, Bash
 
 Evaluate the implementation for refactoring opportunities and apply improvements while keeping tests green.
 
+Test command for this project: `{{TEST_COMMAND}}`. If it looks like a placeholder, discover
+it from `tdd-claude-scaffold.config.json`, `package.json`, `Makefile`, or the CI config.
+
 ## Process
 
 1. Read the implementation and test files.
 2. Evaluate against the refactoring checklist.
 3. Apply improvements if beneficial.
-4. Run the test command (`<TEST_COMMAND>`) to verify tests still pass.
+4. Run the test command (`{{TEST_COMMAND}}`) to verify tests still pass.
 5. Return a summary of changes, or "no refactoring needed."
 
 ## Refactoring Checklist
@@ -54,11 +57,3 @@ If changes made:
 If no changes:
 - "No refactoring needed"
 - Brief reasoning (e.g. "Implementation is minimal and focused")
-
----
-
-## CUSTOMIZE FOR YOUR PROJECT
-
-Replace `<TEST_COMMAND>` above with your project's test command. Optionally point the
-`skills:` frontmatter at a skill that captures how your project extracts reusable logic.
-Delete this note once done.

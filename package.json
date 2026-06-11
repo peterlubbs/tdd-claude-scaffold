@@ -1,0 +1,25 @@
+{
+  "name": "tdd-claude-scaffold",
+  "version": "0.1.0",
+  "description": "Drop-in Test-Driven Development (Red-Green-Refactor) workflow for AI coding agents. Installs a /tdd-claude-scaffold command, subagents, skill, and forced-activation hook into any project.",
+  "type": "module",
+  "bin": {
+    "tdd-claude-scaffold": "bin/tdd-claude-scaffold.mjs"
+  },
+  "files": [
+    "bin",
+    "builders",
+    "src"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "tdd",
+    "test-driven-development",
+    "claude-code",
+    "ai-agents",
+    "red-green-refactor"
+  ],
+  "license": "Apache-2.0"
+}

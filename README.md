@@ -1,104 +1,148 @@
-# TDD Scaffold for Claude Code
+# tdd-claude-scaffold
 
-A drop-in `.claude/` setup that forces Claude Code to follow a strict
-**Red → Green → Refactor** cycle when you ask it to build a feature.
+Import a strict **Red → Green → Refactor** TDD workflow into AI coding agents — across
+projects — with a single `/tdd-claude-scaffold` command.
+
+Instead of copying a `.claude/` folder into every repo by hand, `tdd-claude-scaffold` keeps one
+tool-agnostic source of truth and an installer that emits the right files for each agent.
+This mirrors the [impeccable](https://github.com/pbakaus/impeccable) model
+(one definition → a CLI that builds per-harness installs → a single namespaced command).
 
 Based on Alexander Opalic's
-[*Forcing Claude Code to TDD: An Agentic Red-Green-Refactor Loop*](https://alexop.dev/posts/custom-tdd-workflow-claude-code-vue/),
-generalized so it works with any stack (JS/TS, Python, Go, Rust, Ruby, etc.).
+[*Forcing Claude Code to TDD*](https://alexop.dev/posts/custom-tdd-workflow-claude-code-vue/),
+generalized to any stack and made installable.
+
+## Install
+
+From any project root:
+
+```bash
+npx tdd-claude-scaffold install --test-command="npm test --" --test-dir="src/__tests__/"
+```
+
+Or install once for **every** project (user scope):
+
+```bash
+npx tdd-claude-scaffold install --scope=user --test-command="<your test command>"
+```
+
+Then restart/reload the agent and run:
+
+```
+/tdd-claude-scaffold "Implement a password-reset flow: request a link, set a new password."
+```
+
+### Installer options
+
+| Flag | Purpose | Default |
+| ---- | ------- | ------- |
+| `--providers=<list>` | Comma-separated harnesses to target | `claude` |
+| `--scope=<project\|user>` | `project` → `./.claude`; `user` → `~/.claude` (all projects) | `project` |
+| `--dir=<path>` | Project root for project scope | current dir |
+| `--test-command=<cmd>` | How to run a single test file | prompted later via `/tdd-claude-scaffold init` |
+| `--test-dir=<path>` | Where tests live | prompted later |
+| `--dry-run` | Show what would be written, change nothing | — |
+
+The installer is dependency-free plain Node (≥18) and merges its hook into an existing
+`.claude/settings.json` non-destructively (and idempotently).
+
+### As a git submodule
+
+Pin the workflow to a specific commit and vendor it into your repo:
+
+```bash
+git submodule add https://github.com/<you>/tdd-claude-scaffold .tdd-claude-scaffold
+node .tdd-claude-scaffold/bin/tdd-claude-scaffold.mjs install \
+  --test-command="npm test --" --test-dir="tests/"
+```
+
+The CLI resolves its source (`src/`) relative to its own location and writes the install to
+`--dir` (default: the current directory), so running the submodule's binary from your project
+root reads the definition from the submodule and emits `.claude/` into your project.
+
+`install` **copies** the files, so after updating the submodule
+(`git submodule update --remote`) re-run the install command to pick up the new version.
 
 ## How it works
 
 Three forces combine to make test-first development actually happen:
 
-1. **A skill** (`tdd-integration`) defines explicit phase gates. Each phase blocks the next
-   until it completes — no Green before Red fails, no skipping Refactor.
-2. **Three subagents** run in **isolated contexts** so each phase only sees what it needs:
+1. **A command** (`/tdd-claude-scaffold`) is the single entry point. It dispatches:
+   `init` (set up the test command), a bare feature description (run the full cycle),
+   or `red` / `green` / `refactor` (run one phase).
+2. **A skill** (`tdd-integration`) defines explicit phase gates — no Green before Red fails,
+   no skipping Refactor — and also auto-triggers on phrases like *implement / build / add feature*.
+3. **Three subagents** run in **isolated contexts** so each phase only sees what it needs:
    - `tdd-test-writer` (🔴 RED) — writes a failing test, never sees the implementation plan.
    - `tdd-implementer` (🟢 GREEN) — writes minimal code to pass, only sees the failing test.
    - `tdd-refactorer` (🔵 REFACTOR) — improves the code while keeping tests green.
+
    This isolation is the key idea: in a single shared context the model "cheats" by designing
    tests around code it's already planning. Separate contexts prevent that.
-3. **A hook** (`UserPromptSubmit`) injects a mandatory skill-evaluation step before every
+4. **A hook** (`UserPromptSubmit`) injects a mandatory skill-evaluation step before every
    response, so the TDD skill reliably activates instead of being skipped.
+
+## Repository layout
+
+```
+src/                          # SINGLE SOURCE OF TRUTH (tool-agnostic)
+├── command.md                # the /tdd-claude-scaffold entry point + subcommands
+├── skill.md                  # R→G→R orchestration skill
+├── agents/                   # the three phase subagents ({{TEST_COMMAND}} tokens)
+├── hook.mjs                  # forced skill-activation hook
+└── templates/
+    └── tdd-claude-scaffold.config.json
+builders/                     # per-harness emitters
+├── index.mjs                 # builder registry
+└── claude.mjs                # Claude Code emitter (implemented)
+bin/
+└── tdd-claude-scaffold.mjs            # the installer CLI
+```
+
+What the Claude Code builder emits into `.claude/` (or `~/.claude/` for user scope):
 
 ```
 .claude/
-├── settings.json                    # wires up the hook
-├── skills/
-│   └── tdd-integration/
-│       └── skill.md                 # orchestrates the R-G-R cycle
-├── agents/
-│   ├── tdd-test-writer.md           # 🔴 RED phase
-│   ├── tdd-implementer.md           # 🟢 GREEN phase
-│   └── tdd-refactorer.md            # 🔵 REFACTOR phase
-└── hooks/
-    └── user-prompt-skill-eval.mjs   # forces skill activation each prompt
+├── commands/tdd-claude-scaffold.md            # → /tdd-claude-scaffold
+├── skills/tdd-integration/SKILL.md
+├── agents/{tdd-test-writer,tdd-implementer,tdd-refactorer}.md
+├── hooks/tdd-claude-scaffold-skill-eval.mjs
+└── settings.json                     # UserPromptSubmit hook (merged, not clobbered)
 ```
 
-## Install
+## Adding another agent (Cursor, Codex CLI, Gemini CLI, …)
 
-1. Copy the `.claude/` directory into the root of your project.
-   (If you already have a `.claude/settings.json`, merge the `hooks` block in rather than
-   overwriting.)
-2. Do the customization step below.
-3. Restart / reload Claude Code so it picks up the new skill, agents, and hook.
+The architecture is built for it: add a module under `builders/` exporting
+`{ id, label, detect(targetRoot), install(opts) }` and register it in `builders/index.mjs`.
+The `src/` definition and CLI stay unchanged — only the emitter differs.
 
-The hook script uses plain `node`, which Claude Code already requires — no extra
-dependencies to install. On macOS/Linux you can optionally `chmod +x
-.claude/hooks/user-prompt-skill-eval.mjs`, though it isn't required since the hook invokes
-`node` explicitly.
-
-## Customize (required, ~5 minutes)
-
-The agents ship with placeholders so they don't assume your stack. Replace them:
-
-- **`<TEST_COMMAND>`** — appears in all three agent files. Set it to how you run a single
-  test file, e.g.:
-  | Stack            | Command                 |
-  | ---------------- | ----------------------- |
-  | npm + Vitest/Jest| `npm test --`           |
-  | pnpm             | `pnpm test:unit`        |
-  | Python           | `pytest`                |
-  | Go               | `go test ./...`         |
-  | Rust             | `cargo test`            |
-  | Ruby             | `bundle exec rspec`     |
-
-- **`<TEST_DIR>`** (in `tdd-test-writer.md`) — where tests live in your project.
-
-- **Delete the `## CUSTOMIZE FOR YOUR PROJECT` sections** once you've filled them in.
-
-### Optional: project-specific skills
-
-The test-writer and refactorer have commented-out `skills:` frontmatter. If you want the
-agents to follow your project's exact conventions (test helpers, how you extract reusable
-logic, naming patterns), create skills under `.claude/skills/` and reference them. The
-source article uses two such skills — one documenting test style, one documenting
-reusable-logic patterns — to give each agent project-specific context.
+Caveat worth knowing: true per-phase **context isolation** relies on Claude Code subagents.
+Harnesses without subagents would get a flattened single-prompt version of the cycle, which
+works but loses the isolation guarantee. `cursor`, `codex`, and `gemini` are listed as planned
+providers and currently report "not implemented yet" rather than installing a degraded build.
 
 ## Usage
 
-Just ask Claude Code to build something:
-
-> "Implement a password-reset flow: a user can request a reset link and set a new password."
-
-The `tdd-integration` skill triggers on words like *implement / add feature / build / create*,
-then drives the cycle:
-
 ```
-🔴 RED   → tdd-test-writer writes a failing test, confirms it fails
-🟢 GREEN → tdd-implementer writes minimal code, confirms the test passes
-🔵 REFACTOR → tdd-refactorer improves the code, confirms tests still pass
+/tdd-claude-scaffold init                          # set test command / dir → tdd-claude-scaffold.config.json
+/tdd-claude-scaffold "<feature to build>"          # full 🔴→🟢→🔵 cycle
+/tdd-claude-scaffold red "<feature>"               # just write the failing test
+/tdd-claude-scaffold green                         # make the latest failing test pass
+/tdd-claude-scaffold refactor                      # evaluate + refactor, tests stay green
 ```
 
 For multiple features it completes a full 🔴→🟢→🔵 cycle for each before starting the next.
+It deliberately does **not** auto-trigger for bug fixes, docs, or config changes — adjust the
+`description` in `src/skill.md` and reinstall to change trigger behavior.
 
-It deliberately does **not** trigger for bug fixes, docs, or config changes — adjust the
-`description` field in `skill.md` if you want different trigger behavior.
+### Optional: project-specific skills
+
+The test-writer and refactorer have commented-out `skills:` frontmatter. Create skills under
+`.claude/skills/` documenting your test style and reusable-logic patterns, then reference them
+so each phase follows your project's conventions.
 
 ## Credit
 
 Workflow and original Vue implementation by Alexander Opalic —
 <https://alexop.dev/posts/custom-tdd-workflow-claude-code-vue/>.
-The forced-skill-activation hook approach references Scott Spence's testing of hook
-configurations. This scaffold generalizes that work into a framework-agnostic template.
+Distribution model inspired by [impeccable](https://github.com/pbakaus/impeccable).

@@ -12,10 +12,18 @@ tools: Read, Glob, Grep, Write, Edit, Bash
 
 Write a failing test that verifies the requested feature behavior.
 
+## Project setup
+
+- **Test command:** `{{TEST_COMMAND}}` — how to run a single test file.
+- **Test location:** `{{TEST_DIR}}` — where tests live in this project.
+
+If either value still looks like a placeholder, discover it from `tdd-claude-scaffold.config.json`,
+`package.json`, `Makefile`, or the CI config before writing the test.
+
 ## Process
 
 1. Understand the feature requirement from the prompt.
-2. Write a test in the project's test location (see CUSTOMIZE below).
+2. Write a test in the project's test location.
 3. Run the test command to verify it FAILS.
 4. Return the test file path and the failure output.
 
@@ -33,18 +41,3 @@ Return:
 - Test file path
 - Failure output showing the test fails
 - Brief summary of what the test verifies
-
----
-
-## CUSTOMIZE FOR YOUR PROJECT
-
-Replace the placeholders below to match your stack. Delete this section once filled in.
-
-- **Test command:** `<TEST_COMMAND>` — e.g. `npm test --`, `pnpm test:unit`,
-  `pytest`, `go test ./...`, `cargo test`, `bundle exec rspec`.
-- **Test location:** `<TEST_DIR>` — e.g. `src/__tests__/`, `tests/`, `spec/`,
-  `*_test.go` next to source.
-- **Test framework conventions:** describe your assertion library, fixtures, and
-  any shared setup helper (e.g. a `createTestApp()` / `renderWithProviders()` helper)
-  so tests stay consistent. Consider capturing these in a dedicated
-  `project-testing-conventions` skill and referencing it in the frontmatter above.

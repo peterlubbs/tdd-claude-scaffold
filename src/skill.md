@@ -1,6 +1,6 @@
 ---
 name: tdd-integration
-description: Enforce Test-Driven Development with a strict Red-Green-Refactor cycle. Auto-triggers when implementing new features or functionality. Trigger phrases include "implement", "add feature", "build", "create functionality", or any request to add new behavior. Does NOT trigger for bug fixes, documentation, or configuration changes.
+description: Enforce Test-Driven Development with a strict Red-Green-Refactor cycle. Auto-triggers when implementing new features or functionality. Trigger phrases include "implement", "add feature", "build", "create functionality", or any request to add new behavior. Also drives the /tdd-claude-scaffold command. Does NOT trigger for bug fixes, documentation, or configuration changes.
 ---
 
 # TDD Integration

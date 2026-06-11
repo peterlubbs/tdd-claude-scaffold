@@ -8,12 +8,15 @@ tools: Read, Glob, Grep, Write, Edit, Bash
 
 Implement the minimal code needed to make the failing test pass.
 
+Test command for this project: `{{TEST_COMMAND}}`. If it looks like a placeholder, discover
+it from `tdd-claude-scaffold.config.json`, `package.json`, `Makefile`, or the CI config.
+
 ## Process
 
 1. Read the failing test to understand what behavior it expects.
 2. Identify the files that need changes.
 3. Write the minimal implementation to pass the test.
-4. Run the test command (`<TEST_COMMAND>`) to verify it passes.
+4. Run the test command (`{{TEST_COMMAND}}`) to verify it passes.
 5. Return the implementation summary and success output.
 
 ## Principles
@@ -30,10 +33,3 @@ Return:
 - Files modified, with a brief description of changes
 - Test success output
 - Summary of the implementation
-
----
-
-## CUSTOMIZE FOR YOUR PROJECT
-
-Replace `<TEST_COMMAND>` above with your project's test command
-(e.g. `npm test --`, `pnpm test:unit`, `pytest`, `go test ./...`). Delete this note once done.

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Forces Claude Code to evaluate available skills before responding.
-// Injected on every prompt via the UserPromptSubmit hook (see .claude/settings.json).
+// Injected on every prompt via the UserPromptSubmit hook (see settings.json).
+// Installed by `tdd-claude-scaffold install`.
 //
 // Why: even with a well-written skill, Claude sometimes skips evaluation and jumps
 // straight to implementation. Forcing an explicit eval step raises activation
