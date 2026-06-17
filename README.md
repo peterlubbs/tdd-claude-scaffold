@@ -14,17 +14,23 @@ generalized to any stack and made installable.
 
 ## Install
 
-From any project root:
+This is a private, local tool — clone or pull it somewhere once, then run its installer from
+inside whatever project you want to set up. Run from your target project root:
 
 ```bash
-npx tdd-claude-scaffold install --test-command="npm test --" --test-dir="src/__tests__/"
+node /path/to/tdd-claude-scaffold/bin/tdd-claude-scaffold.mjs install \
+  --test-command="npm test --" --test-dir="src/__tests__/"
 ```
 
-Or install once for **every** project (user scope):
+Equivalently, point `npx` at the local path (a filesystem path, not a registry name):
 
 ```bash
-npx tdd-claude-scaffold install --scope=user --test-command="<your test command>"
+npx /path/to/tdd-claude-scaffold install --test-command="npm test --" --test-dir="src/__tests__/"
 ```
+
+Replace `--test-command` / `--test-dir` with your stack's values (e.g. `go test ./...`, `pytest`).
+
+Install once for **every** project by adding `--scope=user` (writes to `~/.claude` instead of `./.claude`).
 
 Then restart/reload the agent and run:
 
@@ -48,10 +54,11 @@ The installer is dependency-free plain Node (≥18) and merges its hook into an 
 
 ### As a git submodule
 
-Pin the workflow to a specific commit and vendor it into your repo:
+If you keep this tool in a git remote (private is fine), you can pin it to a specific commit
+and vendor it into a project instead of referencing an external checkout:
 
 ```bash
-git submodule add https://github.com/<you>/tdd-claude-scaffold .tdd-claude-scaffold
+git submodule add <your-remote>/tdd-claude-scaffold .tdd-claude-scaffold
 node .tdd-claude-scaffold/bin/tdd-claude-scaffold.mjs install \
   --test-command="npm test --" --test-dir="tests/"
 ```
